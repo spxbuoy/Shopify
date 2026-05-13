@@ -9,8 +9,8 @@ from urllib.parse import urlparse
 
 
 # Config
-API_ID = 21124241
-API_HASH = "b7ddce3d3683f54eae73fa468"
+API_ID = 29954197
+API_HASH = "4ea7a4f028bed2a8077c65085dddc9c4"
 BOT_TOKEN = "8716628980:AAGwVTvtt3Rf-3HpwVGT0eFsydpZYFyxRew" # Replace with your Bot Token
 ADMIN_ID = [8743278247, 8340881349] # Replace with your Admin ID(s)
 GROUP_ID = -1003872018247 # Replace with your Group ID

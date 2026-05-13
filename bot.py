@@ -323,6 +323,11 @@ async def list_proxy_cmd(event):
     for i, p in enumerate(user_proxies, 1):
         msg += f"{i}. `{p['ip']}:{p['port']}`\n"
     await event.reply(msg)
+async def can_use(user_id, chat):
+    if await is_banned_user(user_id):
+        return False, "banned"
+
+    return True, "free"
 
 @client.on(events.NewMessage(pattern=r'(?i)^[/.]sh'))
 async def sh_cmd(event):

